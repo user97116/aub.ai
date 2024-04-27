@@ -253,6 +253,48 @@ class AubAiBindings {
   late final _llama_n_batch =
       _llama_n_batchPtr.asFunction<int Function(ffi.Pointer<llama_context>)>();
 
+  int llama_n_ubatch(
+    ffi.Pointer<llama_context> ctx,
+  ) {
+    return _llama_n_ubatch(
+      ctx,
+    );
+  }
+
+  late final _llama_n_ubatchPtr = _lookup<
+          ffi.NativeFunction<ffi.Uint32 Function(ffi.Pointer<llama_context>)>>(
+      'llama_n_ubatch');
+  late final _llama_n_ubatch =
+      _llama_n_ubatchPtr.asFunction<int Function(ffi.Pointer<llama_context>)>();
+
+  int llama_n_seq_max(
+    ffi.Pointer<llama_context> ctx,
+  ) {
+    return _llama_n_seq_max(
+      ctx,
+    );
+  }
+
+  late final _llama_n_seq_maxPtr = _lookup<
+          ffi.NativeFunction<ffi.Uint32 Function(ffi.Pointer<llama_context>)>>(
+      'llama_n_seq_max');
+  late final _llama_n_seq_max = _llama_n_seq_maxPtr
+      .asFunction<int Function(ffi.Pointer<llama_context>)>();
+
+  int llama_pooling_type1(
+    ffi.Pointer<llama_context> ctx,
+  ) {
+    return _llama_pooling_type1(
+      ctx,
+    );
+  }
+
+  late final _llama_pooling_type1Ptr = _lookup<
+          ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<llama_context>)>>(
+      'llama_pooling_type');
+  late final _llama_pooling_type1 = _llama_pooling_type1Ptr
+      .asFunction<int Function(ffi.Pointer<llama_context>)>();
+
   int llama_vocab_type1(
     ffi.Pointer<llama_model> model,
   ) {
@@ -322,6 +364,20 @@ class AubAiBindings {
           'llama_n_embd');
   late final _llama_n_embd =
       _llama_n_embdPtr.asFunction<int Function(ffi.Pointer<llama_model>)>();
+
+  int llama_n_layer(
+    ffi.Pointer<llama_model> model,
+  ) {
+    return _llama_n_layer(
+      model,
+    );
+  }
+
+  late final _llama_n_layerPtr =
+      _lookup<ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<llama_model>)>>(
+          'llama_n_layer');
+  late final _llama_n_layer =
+      _llama_n_layerPtr.asFunction<int Function(ffi.Pointer<llama_model>)>();
 
   /// Get the model's RoPE frequency scaling factor
   double llama_rope_freq_scale_train(
@@ -557,14 +613,52 @@ class AubAiBindings {
           int Function(ffi.Pointer<llama_model>, ffi.Pointer<ffi.Char>, double,
               ffi.Pointer<ffi.Char>, int)>();
 
+  /// Apply a loaded control vector to a llama_context, or if data is NULL, clear
+  /// the currently loaded vector.
+  /// n_embd should be the size of a single layer's control, and data should point
+  /// to an n_embd x n_layers buffer starting from layer 1.
+  /// il_start and il_end are the layer range the vector should apply to (both inclusive)
+  /// See llama_control_vector_load in common to load a control vector.
+  int llama_control_vector_apply(
+    ffi.Pointer<llama_context> lctx,
+    ffi.Pointer<ffi.Float> data,
+    int len,
+    int n_embd,
+    int il_start,
+    int il_end,
+  ) {
+    return _llama_control_vector_apply(
+      lctx,
+      data,
+      len,
+      n_embd,
+      il_start,
+      il_end,
+    );
+  }
+
+  late final _llama_control_vector_applyPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(
+              ffi.Pointer<llama_context>,
+              ffi.Pointer<ffi.Float>,
+              ffi.Size,
+              ffi.Int32,
+              ffi.Int32,
+              ffi.Int32)>>('llama_control_vector_apply');
+  late final _llama_control_vector_apply =
+      _llama_control_vector_applyPtr.asFunction<
+          int Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Float>, int,
+              int, int, int)>();
+
   /// Create an empty KV cache view. (use only for debugging purposes)
   llama_kv_cache_view llama_kv_cache_view_init(
     ffi.Pointer<llama_context> ctx,
-    int n_max_seq,
+    int n_seq_max,
   ) {
     return _llama_kv_cache_view_init(
       ctx,
-      n_max_seq,
+      n_seq_max,
     );
   }
 
@@ -660,10 +754,11 @@ class AubAiBindings {
       .asFunction<void Function(ffi.Pointer<llama_context>)>();
 
   /// Removes all tokens that belong to the specified sequence and have positions in [p0, p1)
+  /// Returns false if a partial sequence cannot be removed. Removing a whole sequence never fails
   /// seq_id < 0 : match any sequence
   /// p0 < 0     : [0,  p1]
   /// p1 < 0     : [p0, inf)
-  void llama_kv_cache_seq_rm(
+  bool llama_kv_cache_seq_rm(
     ffi.Pointer<llama_context> ctx,
     int seq_id,
     int p0,
@@ -679,10 +774,10 @@ class AubAiBindings {
 
   late final _llama_kv_cache_seq_rmPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Pointer<llama_context>, llama_seq_id, llama_pos,
+          ffi.Bool Function(ffi.Pointer<llama_context>, llama_seq_id, llama_pos,
               llama_pos)>>('llama_kv_cache_seq_rm');
   late final _llama_kv_cache_seq_rm = _llama_kv_cache_seq_rmPtr
-      .asFunction<void Function(ffi.Pointer<llama_context>, int, int, int)>();
+      .asFunction<bool Function(ffi.Pointer<llama_context>, int, int, int)>();
 
   /// Copy all tokens that belong to the specified sequence to another sequence
   /// Note that this does not allocate extra KV cache memory - it simply assigns the tokens to the new sequence
@@ -840,6 +935,20 @@ class AubAiBindings {
 
   /// Returns the maximum size in bytes of the state (rng, logits, embedding
   /// and kv_cache) - will often be smaller after compacting tokens
+  int llama_state_get_size(
+    ffi.Pointer<llama_context> ctx,
+  ) {
+    return _llama_state_get_size(
+      ctx,
+    );
+  }
+
+  late final _llama_state_get_sizePtr = _lookup<
+          ffi.NativeFunction<ffi.Size Function(ffi.Pointer<llama_context>)>>(
+      'llama_state_get_size');
+  late final _llama_state_get_size = _llama_state_get_sizePtr
+      .asFunction<int Function(ffi.Pointer<llama_context>)>();
+
   int llama_get_state_size(
     ffi.Pointer<llama_context> ctx,
   ) {
@@ -857,6 +966,23 @@ class AubAiBindings {
   /// Copies the state to the specified destination address.
   /// Destination needs to have allocated enough memory.
   /// Returns the number of bytes copied
+  int llama_state_get_data(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Uint8> dst,
+  ) {
+    return _llama_state_get_data(
+      ctx,
+      dst,
+    );
+  }
+
+  late final _llama_state_get_dataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<llama_context>,
+              ffi.Pointer<ffi.Uint8>)>>('llama_state_get_data');
+  late final _llama_state_get_data = _llama_state_get_dataPtr.asFunction<
+      int Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>)>();
+
   int llama_copy_state_data(
     ffi.Pointer<llama_context> ctx,
     ffi.Pointer<ffi.Uint8> dst,
@@ -876,6 +1002,23 @@ class AubAiBindings {
 
   /// Set the state reading from the specified address
   /// Returns the number of bytes read
+  int llama_state_set_data(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Uint8> src,
+  ) {
+    return _llama_state_set_data(
+      ctx,
+      src,
+    );
+  }
+
+  late final _llama_state_set_dataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<llama_context>,
+              ffi.Pointer<ffi.Uint8>)>>('llama_state_set_data');
+  late final _llama_state_set_data = _llama_state_set_dataPtr.asFunction<
+      int Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>)>();
+
   int llama_set_state_data(
     ffi.Pointer<llama_context> ctx,
     ffi.Pointer<ffi.Uint8> src,
@@ -894,6 +1037,34 @@ class AubAiBindings {
       int Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>)>();
 
   /// Save/load session file
+  bool llama_state_load_file(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Char> path_session,
+    ffi.Pointer<llama_token> tokens_out,
+    int n_token_capacity,
+    ffi.Pointer<ffi.Size> n_token_count_out,
+  ) {
+    return _llama_state_load_file(
+      ctx,
+      path_session,
+      tokens_out,
+      n_token_capacity,
+      n_token_count_out,
+    );
+  }
+
+  late final _llama_state_load_filePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<llama_context>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<llama_token>,
+              ffi.Size,
+              ffi.Pointer<ffi.Size>)>>('llama_state_load_file');
+  late final _llama_state_load_file = _llama_state_load_filePtr.asFunction<
+      bool Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>,
+          ffi.Pointer<llama_token>, int, ffi.Pointer<ffi.Size>)>();
+
   bool llama_load_session_file(
     ffi.Pointer<llama_context> ctx,
     ffi.Pointer<ffi.Char> path_session,
@@ -922,6 +1093,28 @@ class AubAiBindings {
       bool Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>,
           ffi.Pointer<llama_token>, int, ffi.Pointer<ffi.Size>)>();
 
+  bool llama_state_save_file(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Char> path_session,
+    ffi.Pointer<llama_token> tokens,
+    int n_token_count,
+  ) {
+    return _llama_state_save_file(
+      ctx,
+      path_session,
+      tokens,
+      n_token_count,
+    );
+  }
+
+  late final _llama_state_save_filePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>,
+              ffi.Pointer<llama_token>, ffi.Size)>>('llama_state_save_file');
+  late final _llama_state_save_file = _llama_state_save_filePtr.asFunction<
+      bool Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>,
+          ffi.Pointer<llama_token>, int)>();
+
   bool llama_save_session_file(
     ffi.Pointer<llama_context> ctx,
     ffi.Pointer<ffi.Char> path_session,
@@ -943,6 +1136,132 @@ class AubAiBindings {
   late final _llama_save_session_file = _llama_save_session_filePtr.asFunction<
       bool Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>,
           ffi.Pointer<llama_token>, int)>();
+
+  /// Get the exact size needed to copy the KV cache of a single sequence
+  int llama_state_seq_get_size(
+    ffi.Pointer<llama_context> ctx,
+    int seq_id,
+  ) {
+    return _llama_state_seq_get_size(
+      ctx,
+      seq_id,
+    );
+  }
+
+  late final _llama_state_seq_get_sizePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<llama_context>,
+              llama_seq_id)>>('llama_state_seq_get_size');
+  late final _llama_state_seq_get_size = _llama_state_seq_get_sizePtr
+      .asFunction<int Function(ffi.Pointer<llama_context>, int)>();
+
+  /// Copy the KV cache of a single sequence into the specified buffer
+  int llama_state_seq_get_data(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Uint8> dst,
+    int seq_id,
+  ) {
+    return _llama_state_seq_get_data(
+      ctx,
+      dst,
+      seq_id,
+    );
+  }
+
+  late final _llama_state_seq_get_dataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>,
+              llama_seq_id)>>('llama_state_seq_get_data');
+  late final _llama_state_seq_get_data =
+      _llama_state_seq_get_dataPtr.asFunction<
+          int Function(
+              ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>, int)>();
+
+  /// Copy the sequence data (originally copied with `llama_state_seq_get_data`) into the specified sequence
+  /// Returns:
+  /// - Positive: Ok
+  /// - Zero: Failed to load
+  int llama_state_seq_set_data(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Uint8> src,
+    int dest_seq_id,
+  ) {
+    return _llama_state_seq_set_data(
+      ctx,
+      src,
+      dest_seq_id,
+    );
+  }
+
+  late final _llama_state_seq_set_dataPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>,
+              llama_seq_id)>>('llama_state_seq_set_data');
+  late final _llama_state_seq_set_data =
+      _llama_state_seq_set_dataPtr.asFunction<
+          int Function(
+              ffi.Pointer<llama_context>, ffi.Pointer<ffi.Uint8>, int)>();
+
+  int llama_state_seq_save_file(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Char> filepath,
+    int seq_id,
+    ffi.Pointer<llama_token> tokens,
+    int n_token_count,
+  ) {
+    return _llama_state_seq_save_file(
+      ctx,
+      filepath,
+      seq_id,
+      tokens,
+      n_token_count,
+    );
+  }
+
+  late final _llama_state_seq_save_filePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<llama_context>,
+              ffi.Pointer<ffi.Char>,
+              llama_seq_id,
+              ffi.Pointer<llama_token>,
+              ffi.Size)>>('llama_state_seq_save_file');
+  late final _llama_state_seq_save_file =
+      _llama_state_seq_save_filePtr.asFunction<
+          int Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>, int,
+              ffi.Pointer<llama_token>, int)>();
+
+  int llama_state_seq_load_file(
+    ffi.Pointer<llama_context> ctx,
+    ffi.Pointer<ffi.Char> filepath,
+    int dest_seq_id,
+    ffi.Pointer<llama_token> tokens_out,
+    int n_token_capacity,
+    ffi.Pointer<ffi.Size> n_token_count_out,
+  ) {
+    return _llama_state_seq_load_file(
+      ctx,
+      filepath,
+      dest_seq_id,
+      tokens_out,
+      n_token_capacity,
+      n_token_count_out,
+    );
+  }
+
+  late final _llama_state_seq_load_filePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Size Function(
+              ffi.Pointer<llama_context>,
+              ffi.Pointer<ffi.Char>,
+              llama_seq_id,
+              ffi.Pointer<llama_token>,
+              ffi.Size,
+              ffi.Pointer<ffi.Size>)>>('llama_state_seq_load_file');
+  late final _llama_state_seq_load_file =
+      _llama_state_seq_load_filePtr.asFunction<
+          int Function(ffi.Pointer<llama_context>, ffi.Pointer<ffi.Char>, int,
+              ffi.Pointer<llama_token>, int, ffi.Pointer<ffi.Size>)>();
 
   /// Return batch for single sequence of tokens starting at pos_0
   ///
@@ -1052,6 +1371,25 @@ class AubAiBindings {
   late final _llama_set_n_threads = _llama_set_n_threadsPtr
       .asFunction<void Function(ffi.Pointer<llama_context>, int, int)>();
 
+  /// Set whether to use causal attention or not
+  /// If set to true, the model will only attend to the past tokens
+  void llama_set_causal_attn(
+    ffi.Pointer<llama_context> ctx,
+    bool causal_attn,
+  ) {
+    return _llama_set_causal_attn(
+      ctx,
+      causal_attn,
+    );
+  }
+
+  late final _llama_set_causal_attnPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<llama_context>, ffi.Bool)>>('llama_set_causal_attn');
+  late final _llama_set_causal_attn = _llama_set_causal_attnPtr
+      .asFunction<void Function(ffi.Pointer<llama_context>, bool)>();
+
   /// Set abort callback
   void llama_set_abort_callback(
     ffi.Pointer<llama_context> ctx,
@@ -1074,10 +1412,27 @@ class AubAiBindings {
           void Function(ffi.Pointer<llama_context>, ggml_abort_callback,
               ffi.Pointer<ffi.Void>)>();
 
+  /// Wait until all computations are finished
+  /// This is automatically done when using one of the functions below to obtain the computation results
+  /// and is not necessary to call it explicitly in most cases
+  void llama_synchronize(
+    ffi.Pointer<llama_context> ctx,
+  ) {
+    return _llama_synchronize(
+      ctx,
+    );
+  }
+
+  late final _llama_synchronizePtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<llama_context>)>>(
+      'llama_synchronize');
+  late final _llama_synchronize = _llama_synchronizePtr
+      .asFunction<void Function(ffi.Pointer<llama_context>)>();
+
   /// Token logits obtained from the last call to llama_decode()
-  /// The logits for the last token are stored in the last row
-  /// Logits for which llama_batch.logits[i] == 0 are undefined
-  /// Rows: n_tokens provided with llama_batch
+  /// The logits for which llama_batch.logits[i] != 0 are stored contiguously
+  /// in the order they have appeared in the batch.
+  /// Rows: number of tokens for which llama_batch.logits[i] != 0
   /// Cols: n_vocab
   ffi.Pointer<ffi.Float> llama_get_logits(
     ffi.Pointer<llama_context> ctx,
@@ -1094,8 +1449,10 @@ class AubAiBindings {
   late final _llama_get_logits = _llama_get_logitsPtr.asFunction<
       ffi.Pointer<ffi.Float> Function(ffi.Pointer<llama_context>)>();
 
-  /// Logits for the ith token. Equivalent to:
-  /// llama_get_logits(ctx) + i*n_vocab
+  /// Logits for the ith token. For positive indices, Equivalent to:
+  /// llama_get_logits(ctx) + ctx->output_ids[i]*n_vocab
+  /// Negative indicies can be used to access logits in reverse order, -1 is the last logit.
+  /// returns NULL for invalid ids.
   ffi.Pointer<ffi.Float> llama_get_logits_ith(
     ffi.Pointer<llama_context> ctx,
     int i,
@@ -1113,8 +1470,12 @@ class AubAiBindings {
   late final _llama_get_logits_ith = _llama_get_logits_ithPtr.asFunction<
       ffi.Pointer<ffi.Float> Function(ffi.Pointer<llama_context>, int)>();
 
-  /// Get the embeddings for the input
-  /// shape: [n_embd] (1-dimensional)
+  /// Get all output token embeddings.
+  /// when pooling_type == LLAMA_POOLING_TYPE_NONE or when using a generative model,
+  /// the embeddings for which llama_batch.logits[i] != 0 are stored contiguously
+  /// in the order they have appeared in the batch.
+  /// shape: [n_outputs*n_embd]
+  /// Otherwise, returns NULL.
   ffi.Pointer<ffi.Float> llama_get_embeddings(
     ffi.Pointer<llama_context> ctx,
   ) {
@@ -1130,8 +1491,11 @@ class AubAiBindings {
   late final _llama_get_embeddings = _llama_get_embeddingsPtr.asFunction<
       ffi.Pointer<ffi.Float> Function(ffi.Pointer<llama_context>)>();
 
-  /// Get the embeddings for the ith sequence
-  /// llama_get_embeddings(ctx) + i*n_embd
+  /// Get the embeddings for the ith token. For positive indices, Equivalent to:
+  /// llama_get_embeddings(ctx) + ctx->output_ids[i]*n_embd
+  /// Negative indicies can be used to access embeddings in reverse order, -1 is the last embedding.
+  /// shape: [n_embd] (1-dimensional)
+  /// returns NULL for invalid ids.
   ffi.Pointer<ffi.Float> llama_get_embeddings_ith(
     ffi.Pointer<llama_context> ctx,
     int i,
@@ -1148,6 +1512,27 @@ class AubAiBindings {
               ffi.Int32)>>('llama_get_embeddings_ith');
   late final _llama_get_embeddings_ith =
       _llama_get_embeddings_ithPtr.asFunction<
+          ffi.Pointer<ffi.Float> Function(ffi.Pointer<llama_context>, int)>();
+
+  /// Get the embeddings for a sequence id
+  /// Returns NULL if pooling_type is LLAMA_POOLING_TYPE_NONE
+  /// shape: [n_embd] (1-dimensional)
+  ffi.Pointer<ffi.Float> llama_get_embeddings_seq(
+    ffi.Pointer<llama_context> ctx,
+    int seq_id,
+  ) {
+    return _llama_get_embeddings_seq(
+      ctx,
+      seq_id,
+    );
+  }
+
+  late final _llama_get_embeddings_seqPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Float> Function(ffi.Pointer<llama_context>,
+              llama_seq_id)>>('llama_get_embeddings_seq');
+  late final _llama_get_embeddings_seq =
+      _llama_get_embeddings_seqPtr.asFunction<
           ffi.Pointer<ffi.Float> Function(ffi.Pointer<llama_context>, int)>();
 
   /// Vocab
@@ -1202,6 +1587,24 @@ class AubAiBindings {
   late final _llama_token_get_type = _llama_token_get_typePtr
       .asFunction<int Function(ffi.Pointer<llama_model>, int)>();
 
+  /// Check if the token is supposed to end generation (end-of-generation, eg. EOS, EOT, etc.)
+  bool llama_token_is_eog(
+    ffi.Pointer<llama_model> model,
+    int token,
+  ) {
+    return _llama_token_is_eog(
+      model,
+      token,
+    );
+  }
+
+  late final _llama_token_is_eogPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(
+              ffi.Pointer<llama_model>, llama_token)>>('llama_token_is_eog');
+  late final _llama_token_is_eog = _llama_token_is_eogPtr
+      .asFunction<bool Function(ffi.Pointer<llama_model>, int)>();
+
   /// Special tokens
   int llama_token_bos(
     ffi.Pointer<llama_model> model,
@@ -1230,6 +1633,34 @@ class AubAiBindings {
       'llama_token_eos');
   late final _llama_token_eos =
       _llama_token_eosPtr.asFunction<int Function(ffi.Pointer<llama_model>)>();
+
+  int llama_token_cls(
+    ffi.Pointer<llama_model> model,
+  ) {
+    return _llama_token_cls(
+      model,
+    );
+  }
+
+  late final _llama_token_clsPtr = _lookup<
+          ffi.NativeFunction<llama_token Function(ffi.Pointer<llama_model>)>>(
+      'llama_token_cls');
+  late final _llama_token_cls =
+      _llama_token_clsPtr.asFunction<int Function(ffi.Pointer<llama_model>)>();
+
+  int llama_token_sep(
+    ffi.Pointer<llama_model> model,
+  ) {
+    return _llama_token_sep(
+      model,
+    );
+  }
+
+  late final _llama_token_sepPtr = _lookup<
+          ffi.NativeFunction<llama_token Function(ffi.Pointer<llama_model>)>>(
+      'llama_token_sep');
+  late final _llama_token_sep =
+      _llama_token_sepPtr.asFunction<int Function(ffi.Pointer<llama_model>)>();
 
   int llama_token_nl(
     ffi.Pointer<llama_model> model,
@@ -1275,7 +1706,7 @@ class AubAiBindings {
   late final _llama_add_eos_token = _llama_add_eos_tokenPtr
       .asFunction<int Function(ffi.Pointer<llama_model>)>();
 
-  /// codellama infill tokens
+  /// Codellama infill tokens
   int llama_token_prefix(
     ffi.Pointer<llama_model> model,
   ) {
@@ -1334,27 +1765,27 @@ class AubAiBindings {
 
   /// @details Convert the provided text into tokens.
   /// @param tokens The tokens pointer must be large enough to hold the resulting tokens.
-  /// @return Returns the number of tokens on success, no more than n_max_tokens
+  /// @return Returns the number of tokens on success, no more than n_tokens_max
   /// @return Returns a negative number on failure - the number of tokens that would have been returned
-  /// @param special Allow tokenizing special and/or control tokens which otherwise are not exposed and treated as plaintext.
-  /// Does not insert a leading space.
+  /// @param parse_special Allow tokenizing special and/or control tokens which otherwise are not exposed and treated
+  /// as plaintext. Does not insert a leading space.
   int llama_tokenize(
     ffi.Pointer<llama_model> model,
     ffi.Pointer<ffi.Char> text,
     int text_len,
     ffi.Pointer<llama_token> tokens,
-    int n_max_tokens,
-    bool add_bos,
-    bool special,
+    int n_tokens_max,
+    bool add_special,
+    bool parse_special,
   ) {
     return _llama_tokenize(
       model,
       text,
       text_len,
       tokens,
-      n_max_tokens,
-      add_bos,
-      special,
+      n_tokens_max,
+      add_special,
+      parse_special,
     );
   }
 
@@ -1376,27 +1807,34 @@ class AubAiBindings {
   /// Uses the vocabulary in the provided context.
   /// Does not write null terminator to the buffer.
   /// User code is responsible to remove the leading whitespace of the first non-BOS token when decoding multiple tokens.
+  /// @param special If true, special tokens are rendered in the output.
   int llama_token_to_piece(
     ffi.Pointer<llama_model> model,
     int token,
     ffi.Pointer<ffi.Char> buf,
     int length,
+    bool special,
   ) {
     return _llama_token_to_piece(
       model,
       token,
       buf,
       length,
+      special,
     );
   }
 
   late final _llama_token_to_piecePtr = _lookup<
       ffi.NativeFunction<
-          ffi.Int32 Function(ffi.Pointer<llama_model>, llama_token,
-              ffi.Pointer<ffi.Char>, ffi.Int32)>>('llama_token_to_piece');
+          ffi.Int32 Function(
+              ffi.Pointer<llama_model>,
+              llama_token,
+              ffi.Pointer<ffi.Char>,
+              ffi.Int32,
+              ffi.Bool)>>('llama_token_to_piece');
   late final _llama_token_to_piece = _llama_token_to_piecePtr.asFunction<
       int Function(
-          ffi.Pointer<llama_model>, int, ffi.Pointer<ffi.Char>, int)>();
+          ffi.Pointer<llama_model>, int, ffi.Pointer<ffi.Char>, int, bool)>();
 
   /// Apply chat template. Inspired by hf apply_chat_template() on python.
   /// Both "model" and "custom_template" are optional, but at least one is required. "custom_template" has higher precedence than "model"
@@ -1918,7 +2356,7 @@ class AubAiBindings {
           int Function(ffi.Pointer<llama_context>,
               ffi.Pointer<llama_token_data_array>)>();
 
-  /// @details Randomly selects a token from the candidates based on their probabilities.
+  /// @details Randomly selects a token from the candidates based on their probabilities using the RNG of ctx.
   int llama_sample_token(
     ffi.Pointer<llama_context> ctx,
     ffi.Pointer<llama_token_data_array> candidates,
@@ -1998,6 +2436,60 @@ class AubAiBindings {
   late final _llama_beam_search = _llama_beam_searchPtr.asFunction<
       void Function(ffi.Pointer<llama_context>, llama_beam_search_callback_fn_t,
           ffi.Pointer<ffi.Void>, int, int, int)>();
+
+  /// @details Build a split GGUF final path for this chunk.
+  /// llama_split_path(split_path, sizeof(split_path), "/models/ggml-model-q4_0", 2, 4) => split_path = "/models/ggml-model-q4_0-00002-of-00004.gguf"
+  /// Returns the split_path length.
+  int llama_split_path(
+    ffi.Pointer<ffi.Char> split_path,
+    int maxlen,
+    ffi.Pointer<ffi.Char> path_prefix,
+    int split_no,
+    int split_count,
+  ) {
+    return _llama_split_path(
+      split_path,
+      maxlen,
+      path_prefix,
+      split_no,
+      split_count,
+    );
+  }
+
+  late final _llama_split_pathPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Size,
+              ffi.Pointer<ffi.Char>, ffi.Int, ffi.Int)>>('llama_split_path');
+  late final _llama_split_path = _llama_split_pathPtr.asFunction<
+      int Function(
+          ffi.Pointer<ffi.Char>, int, ffi.Pointer<ffi.Char>, int, int)>();
+
+  /// @details Extract the path prefix from the split_path if and only if the split_no and split_count match.
+  /// llama_split_prefix(split_prefix, 64, "/models/ggml-model-q4_0-00002-of-00004.gguf", 2, 4) => split_prefix = "/models/ggml-model-q4_0"
+  /// Returns the split_prefix length.
+  int llama_split_prefix(
+    ffi.Pointer<ffi.Char> split_prefix,
+    int maxlen,
+    ffi.Pointer<ffi.Char> split_path,
+    int split_no,
+    int split_count,
+  ) {
+    return _llama_split_prefix(
+      split_prefix,
+      maxlen,
+      split_path,
+      split_no,
+      split_count,
+    );
+  }
+
+  late final _llama_split_prefixPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Size,
+              ffi.Pointer<ffi.Char>, ffi.Int, ffi.Int)>>('llama_split_prefix');
+  late final _llama_split_prefix = _llama_split_prefixPtr.asFunction<
+      int Function(
+          ffi.Pointer<ffi.Char>, int, ffi.Pointer<ffi.Char>, int, int)>();
 
   /// Performance information
   llama_timings llama_get_timings(
@@ -2358,6 +2850,46 @@ class AubAiBindings {
       _DestroyOnlineRecognizerResultPtr.asFunction<
           void Function(ffi.Pointer<SherpaOnnxOnlineRecognizerResult>)>();
 
+  /// Return the result as a json string.
+  /// The user has to invoke
+  /// DestroyOnlineStreamResultJson()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<ffi.Char> GetOnlineStreamResultAsJson(
+    ffi.Pointer<SherpaOnnxOnlineRecognizer> recognizer,
+    ffi.Pointer<SherpaOnnxOnlineStream> stream,
+  ) {
+    return _GetOnlineStreamResultAsJson(
+      recognizer,
+      stream,
+    );
+  }
+
+  late final _GetOnlineStreamResultAsJsonPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<ffi.Char> Function(
+                  ffi.Pointer<SherpaOnnxOnlineRecognizer>,
+                  ffi.Pointer<SherpaOnnxOnlineStream>)>>(
+      'GetOnlineStreamResultAsJson');
+  late final _GetOnlineStreamResultAsJson =
+      _GetOnlineStreamResultAsJsonPtr.asFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<SherpaOnnxOnlineRecognizer>,
+              ffi.Pointer<SherpaOnnxOnlineStream>)>();
+
+  void DestroyOnlineStreamResultJson(
+    ffi.Pointer<ffi.Char> s,
+  ) {
+    return _DestroyOnlineStreamResultJson(
+      s,
+    );
+  }
+
+  late final _DestroyOnlineStreamResultJsonPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+          'DestroyOnlineStreamResultJson');
+  late final _DestroyOnlineStreamResultJson = _DestroyOnlineStreamResultJsonPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+
   /// Reset an OnlineStream , which clears the neural network model state
   /// and the state for decoding.
   ///
@@ -2689,6 +3221,223 @@ class AubAiBindings {
   late final _DestroyOfflineRecognizerResult =
       _DestroyOfflineRecognizerResultPtr.asFunction<
           void Function(ffi.Pointer<SherpaOnnxOfflineRecognizerResult>)>();
+
+  /// Return the result as a json string.
+  /// The user has to use DestroyOfflineStreamResultJson()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<ffi.Char> GetOfflineStreamResultAsJson(
+    ffi.Pointer<SherpaOnnxOfflineStream> stream,
+  ) {
+    return _GetOfflineStreamResultAsJson(
+      stream,
+    );
+  }
+
+  late final _GetOfflineStreamResultAsJsonPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<ffi.Char> Function(
+                  ffi.Pointer<SherpaOnnxOfflineStream>)>>(
+      'GetOfflineStreamResultAsJson');
+  late final _GetOfflineStreamResultAsJson =
+      _GetOfflineStreamResultAsJsonPtr.asFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<SherpaOnnxOfflineStream>)>();
+
+  void DestroyOfflineStreamResultJson(
+    ffi.Pointer<ffi.Char> s,
+  ) {
+    return _DestroyOfflineStreamResultJson(
+      s,
+    );
+  }
+
+  late final _DestroyOfflineStreamResultJsonPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+          'DestroyOfflineStreamResultJson');
+  late final _DestroyOfflineStreamResultJson =
+      _DestroyOfflineStreamResultJsonPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Char>)>();
+
+  /// @param config  Config for the keyword spotter.
+  /// @return Return a pointer to the spotter. The user has to invoke
+  /// DestroyKeywordSpotter() to free it to avoid memory leak.
+  ffi.Pointer<SherpaOnnxKeywordSpotter> CreateKeywordSpotter(
+    ffi.Pointer<SherpaOnnxKeywordSpotterConfig> config,
+  ) {
+    return _CreateKeywordSpotter(
+      config,
+    );
+  }
+
+  late final _CreateKeywordSpotterPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxKeywordSpotter> Function(
+                  ffi.Pointer<SherpaOnnxKeywordSpotterConfig>)>>(
+      'CreateKeywordSpotter');
+  late final _CreateKeywordSpotter = _CreateKeywordSpotterPtr.asFunction<
+      ffi.Pointer<SherpaOnnxKeywordSpotter> Function(
+          ffi.Pointer<SherpaOnnxKeywordSpotterConfig>)>();
+
+  /// Free a pointer returned by CreateKeywordSpotter()
+  ///
+  /// @param p A pointer returned by CreateKeywordSpotter()
+  void DestroyKeywordSpotter(
+    ffi.Pointer<SherpaOnnxKeywordSpotter> spotter,
+  ) {
+    return _DestroyKeywordSpotter(
+      spotter,
+    );
+  }
+
+  late final _DestroyKeywordSpotterPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<SherpaOnnxKeywordSpotter>)>>('DestroyKeywordSpotter');
+  late final _DestroyKeywordSpotter = _DestroyKeywordSpotterPtr.asFunction<
+      void Function(ffi.Pointer<SherpaOnnxKeywordSpotter>)>();
+
+  /// Create an online stream for accepting wave samples.
+  ///
+  /// @param spotter A pointer returned by CreateKeywordSpotter()
+  /// @return Return a pointer to an OnlineStream. The user has to invoke
+  /// DestroyOnlineStream() to free it to avoid memory leak.
+  ffi.Pointer<SherpaOnnxOnlineStream> CreateKeywordStream(
+    ffi.Pointer<SherpaOnnxKeywordSpotter> spotter,
+  ) {
+    return _CreateKeywordStream(
+      spotter,
+    );
+  }
+
+  late final _CreateKeywordStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<SherpaOnnxOnlineStream> Function(
+              ffi.Pointer<SherpaOnnxKeywordSpotter>)>>('CreateKeywordStream');
+  late final _CreateKeywordStream = _CreateKeywordStreamPtr.asFunction<
+      ffi.Pointer<SherpaOnnxOnlineStream> Function(
+          ffi.Pointer<SherpaOnnxKeywordSpotter>)>();
+
+  /// Return 1 if there are enough number of feature frames for decoding.
+  /// Return 0 otherwise.
+  ///
+  /// @param spotter A pointer returned by CreateKeywordSpotter
+  /// @param stream  A pointer returned by CreateKeywordStream
+  int IsKeywordStreamReady(
+    ffi.Pointer<SherpaOnnxKeywordSpotter> spotter,
+    ffi.Pointer<SherpaOnnxOnlineStream> stream,
+  ) {
+    return _IsKeywordStreamReady(
+      spotter,
+      stream,
+    );
+  }
+
+  late final _IsKeywordStreamReadyPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(ffi.Pointer<SherpaOnnxKeywordSpotter>,
+              ffi.Pointer<SherpaOnnxOnlineStream>)>>('IsKeywordStreamReady');
+  late final _IsKeywordStreamReady = _IsKeywordStreamReadyPtr.asFunction<
+      int Function(ffi.Pointer<SherpaOnnxKeywordSpotter>,
+          ffi.Pointer<SherpaOnnxOnlineStream>)>();
+
+  /// Call this function to run the neural network model and decoding.
+  ///
+  /// Precondition for this function: IsKeywordStreamReady() MUST return 1.
+  void DecodeKeywordStream(
+    ffi.Pointer<SherpaOnnxKeywordSpotter> spotter,
+    ffi.Pointer<SherpaOnnxOnlineStream> stream,
+  ) {
+    return _DecodeKeywordStream(
+      spotter,
+      stream,
+    );
+  }
+
+  late final _DecodeKeywordStreamPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<SherpaOnnxKeywordSpotter>,
+              ffi.Pointer<SherpaOnnxOnlineStream>)>>('DecodeKeywordStream');
+  late final _DecodeKeywordStream = _DecodeKeywordStreamPtr.asFunction<
+      void Function(ffi.Pointer<SherpaOnnxKeywordSpotter>,
+          ffi.Pointer<SherpaOnnxOnlineStream>)>();
+
+  /// This function is similar to DecodeKeywordStream(). It decodes multiple
+  /// OnlineStream in parallel.
+  ///
+  /// Caution: The caller has to ensure each OnlineStream is ready, i.e.,
+  /// IsKeywordStreamReady() for that stream should return 1.
+  ///
+  /// @param spotter A pointer returned by CreateKeywordSpotter()
+  /// @param streams  A pointer array containing pointers returned by
+  /// CreateKeywordStream()
+  /// @param n  Number of elements in the given streams array.
+  void DecodeMultipleKeywordStreams(
+    ffi.Pointer<SherpaOnnxKeywordSpotter> spotter,
+    ffi.Pointer<ffi.Pointer<SherpaOnnxOnlineStream>> streams,
+    int n,
+  ) {
+    return _DecodeMultipleKeywordStreams(
+      spotter,
+      streams,
+      n,
+    );
+  }
+
+  late final _DecodeMultipleKeywordStreamsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<SherpaOnnxKeywordSpotter>,
+              ffi.Pointer<ffi.Pointer<SherpaOnnxOnlineStream>>,
+              ffi.Int32)>>('DecodeMultipleKeywordStreams');
+  late final _DecodeMultipleKeywordStreams =
+      _DecodeMultipleKeywordStreamsPtr.asFunction<
+          void Function(ffi.Pointer<SherpaOnnxKeywordSpotter>,
+              ffi.Pointer<ffi.Pointer<SherpaOnnxOnlineStream>>, int)>();
+
+  /// Get the decoding results so far for an OnlineStream.
+  ///
+  /// @param recognizer A pointer returned by CreateKeywordSpotter().
+  /// @param stream A pointer returned by CreateKeywordStream().
+  /// @return A pointer containing the result. The user has to invoke
+  /// DestroyKeywordResult() to free the returned pointer to
+  /// avoid memory leak.
+  ffi.Pointer<SherpaOnnxKeywordResult> GetKeywordResult(
+    ffi.Pointer<SherpaOnnxKeywordSpotter> spotter,
+    ffi.Pointer<SherpaOnnxOnlineStream> stream,
+  ) {
+    return _GetKeywordResult(
+      spotter,
+      stream,
+    );
+  }
+
+  late final _GetKeywordResultPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<SherpaOnnxKeywordResult> Function(
+              ffi.Pointer<SherpaOnnxKeywordSpotter>,
+              ffi.Pointer<SherpaOnnxOnlineStream>)>>('GetKeywordResult');
+  late final _GetKeywordResult = _GetKeywordResultPtr.asFunction<
+      ffi.Pointer<SherpaOnnxKeywordResult> Function(
+          ffi.Pointer<SherpaOnnxKeywordSpotter>,
+          ffi.Pointer<SherpaOnnxOnlineStream>)>();
+
+  /// Destroy the pointer returned by GetKeywordResult().
+  ///
+  /// @param r A pointer returned by GetKeywordResult()
+  void DestroyKeywordResult(
+    ffi.Pointer<SherpaOnnxKeywordResult> r,
+  ) {
+    return _DestroyKeywordResult(
+      r,
+    );
+  }
+
+  late final _DestroyKeywordResultPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<SherpaOnnxKeywordResult>)>>('DestroyKeywordResult');
+  late final _DestroyKeywordResult = _DestroyKeywordResultPtr.asFunction<
+      void Function(ffi.Pointer<SherpaOnnxKeywordResult>)>();
 
   /// Return an instance of circular buffer. The user has to use
   /// SherpaOnnxDestroyCircularBuffer() to free the returned pointer to avoid
@@ -3101,6 +3850,23 @@ class AubAiBindings {
       _SherpaOnnxOfflineTtsSampleRatePtr.asFunction<
           int Function(ffi.Pointer<SherpaOnnxOfflineTts>)>();
 
+  /// Return the number of speakers of the current TTS object
+  int SherpaOnnxOfflineTtsNumSpeakers(
+    ffi.Pointer<SherpaOnnxOfflineTts> tts,
+  ) {
+    return _SherpaOnnxOfflineTtsNumSpeakers(
+      tts,
+    );
+  }
+
+  late final _SherpaOnnxOfflineTtsNumSpeakersPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(ffi.Pointer<SherpaOnnxOfflineTts>)>>(
+      'SherpaOnnxOfflineTtsNumSpeakers');
+  late final _SherpaOnnxOfflineTtsNumSpeakers =
+      _SherpaOnnxOfflineTtsNumSpeakersPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxOfflineTts>)>();
+
   /// Generate audio from the given text and speaker id (sid).
   /// The user has to use DestroyOfflineTtsGeneratedAudio() to free the
   /// returned pointer to avoid memory leak.
@@ -3172,6 +3938,47 @@ class AubAiBindings {
               double,
               SherpaOnnxGeneratedAudioCallback)>();
 
+  /// Same as SherpaOnnxGeneratedAudioCallback but you can pass an additional
+  /// `void* arg` to the callback.
+  ffi.Pointer<SherpaOnnxGeneratedAudio>
+      SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+    ffi.Pointer<SherpaOnnxOfflineTts> tts,
+    ffi.Pointer<ffi.Char> text,
+    int sid,
+    double speed,
+    SherpaOnnxGeneratedAudioCallbackWithArg callback,
+    ffi.Pointer<ffi.Void> arg,
+  ) {
+    return _SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+      tts,
+      text,
+      sid,
+      speed,
+      callback,
+      arg,
+    );
+  }
+
+  late final _SherpaOnnxOfflineTtsGenerateWithCallbackWithArgPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxGeneratedAudio> Function(
+                  ffi.Pointer<SherpaOnnxOfflineTts>,
+                  ffi.Pointer<ffi.Char>,
+                  ffi.Int32,
+                  ffi.Float,
+                  SherpaOnnxGeneratedAudioCallbackWithArg,
+                  ffi.Pointer<ffi.Void>)>>(
+      'SherpaOnnxOfflineTtsGenerateWithCallbackWithArg');
+  late final _SherpaOnnxOfflineTtsGenerateWithCallbackWithArg =
+      _SherpaOnnxOfflineTtsGenerateWithCallbackWithArgPtr.asFunction<
+          ffi.Pointer<SherpaOnnxGeneratedAudio> Function(
+              ffi.Pointer<SherpaOnnxOfflineTts>,
+              ffi.Pointer<ffi.Char>,
+              int,
+              double,
+              SherpaOnnxGeneratedAudioCallbackWithArg,
+              ffi.Pointer<ffi.Void>)>();
+
   void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     ffi.Pointer<SherpaOnnxGeneratedAudio> p,
   ) {
@@ -3212,6 +4019,796 @@ class AubAiBindings {
               ffi.Pointer<ffi.Char>)>>('SherpaOnnxWriteWave');
   late final _SherpaOnnxWriteWave = _SherpaOnnxWriteWavePtr.asFunction<
       int Function(ffi.Pointer<ffi.Float>, int, int, ffi.Pointer<ffi.Char>)>();
+
+  /// Return a NULL pointer on error. It supports only standard WAVE file.
+  /// Each sample should be 16-bit. It supports only single channel..
+  ///
+  /// If the returned pointer is not NULL, the user has to invoke
+  /// SherpaOnnxFreeWave() to free the returned pointer to avoid memory leak.
+  ffi.Pointer<SherpaOnnxWave> SherpaOnnxReadWave(
+    ffi.Pointer<ffi.Char> filename,
+  ) {
+    return _SherpaOnnxReadWave(
+      filename,
+    );
+  }
+
+  late final _SherpaOnnxReadWavePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<SherpaOnnxWave> Function(
+              ffi.Pointer<ffi.Char>)>>('SherpaOnnxReadWave');
+  late final _SherpaOnnxReadWave = _SherpaOnnxReadWavePtr.asFunction<
+      ffi.Pointer<SherpaOnnxWave> Function(ffi.Pointer<ffi.Char>)>();
+
+  void SherpaOnnxFreeWave(
+    ffi.Pointer<SherpaOnnxWave> wave,
+  ) {
+    return _SherpaOnnxFreeWave(
+      wave,
+    );
+  }
+
+  late final _SherpaOnnxFreeWavePtr = _lookup<
+          ffi.NativeFunction<ffi.Void Function(ffi.Pointer<SherpaOnnxWave>)>>(
+      'SherpaOnnxFreeWave');
+  late final _SherpaOnnxFreeWave = _SherpaOnnxFreeWavePtr.asFunction<
+      void Function(ffi.Pointer<SherpaOnnxWave>)>();
+
+  /// Create an instance of SpokenLanguageIdentification.
+  /// The user has to invoke SherpaOnnxDestroySpokenLanguageIdentification()
+  /// to free the returned pointer to avoid memory leak.
+  ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>
+      SherpaOnnxCreateSpokenLanguageIdentification(
+    ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationConfig> config,
+  ) {
+    return _SherpaOnnxCreateSpokenLanguageIdentification(
+      config,
+    );
+  }
+
+  late final _SherpaOnnxCreateSpokenLanguageIdentificationPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxSpokenLanguageIdentification> Function(
+                  ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationConfig>)>>(
+      'SherpaOnnxCreateSpokenLanguageIdentification');
+  late final _SherpaOnnxCreateSpokenLanguageIdentification =
+      _SherpaOnnxCreateSpokenLanguageIdentificationPtr.asFunction<
+          ffi.Pointer<SherpaOnnxSpokenLanguageIdentification> Function(
+              ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationConfig>)>();
+
+  void SherpaOnnxDestroySpokenLanguageIdentification(
+    ffi.Pointer<SherpaOnnxSpokenLanguageIdentification> slid,
+  ) {
+    return _SherpaOnnxDestroySpokenLanguageIdentification(
+      slid,
+    );
+  }
+
+  late final _SherpaOnnxDestroySpokenLanguageIdentificationPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>)>>(
+      'SherpaOnnxDestroySpokenLanguageIdentification');
+  late final _SherpaOnnxDestroySpokenLanguageIdentification =
+      _SherpaOnnxDestroySpokenLanguageIdentificationPtr.asFunction<
+          void Function(ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>)>();
+
+  /// The user has to invoke DestroyOfflineStream()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxOfflineStream>
+      SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(
+    ffi.Pointer<SherpaOnnxSpokenLanguageIdentification> slid,
+  ) {
+    return _SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(
+      slid,
+    );
+  }
+
+  late final _SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<SherpaOnnxOfflineStream> Function(
+                      ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>)>>(
+          'SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream');
+  late final _SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream =
+      _SherpaOnnxSpokenLanguageIdentificationCreateOfflineStreamPtr.asFunction<
+          ffi.Pointer<SherpaOnnxOfflineStream> Function(
+              ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>)>();
+
+  /// The user has to invoke SherpaOnnxDestroySpokenLanguageIdentificationResult()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationResult>
+      SherpaOnnxSpokenLanguageIdentificationCompute(
+    ffi.Pointer<SherpaOnnxSpokenLanguageIdentification> slid,
+    ffi.Pointer<SherpaOnnxOfflineStream> s,
+  ) {
+    return _SherpaOnnxSpokenLanguageIdentificationCompute(
+      slid,
+      s,
+    );
+  }
+
+  late final _SherpaOnnxSpokenLanguageIdentificationComputePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationResult> Function(
+                  ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>,
+                  ffi.Pointer<SherpaOnnxOfflineStream>)>>(
+      'SherpaOnnxSpokenLanguageIdentificationCompute');
+  late final _SherpaOnnxSpokenLanguageIdentificationCompute =
+      _SherpaOnnxSpokenLanguageIdentificationComputePtr.asFunction<
+          ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationResult> Function(
+              ffi.Pointer<SherpaOnnxSpokenLanguageIdentification>,
+              ffi.Pointer<SherpaOnnxOfflineStream>)>();
+
+  void SherpaOnnxDestroySpokenLanguageIdentificationResult(
+    ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationResult> r,
+  ) {
+    return _SherpaOnnxDestroySpokenLanguageIdentificationResult(
+      r,
+    );
+  }
+
+  late final _SherpaOnnxDestroySpokenLanguageIdentificationResultPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationResult>)>>(
+      'SherpaOnnxDestroySpokenLanguageIdentificationResult');
+  late final _SherpaOnnxDestroySpokenLanguageIdentificationResult =
+      _SherpaOnnxDestroySpokenLanguageIdentificationResultPtr.asFunction<
+          void Function(
+              ffi.Pointer<SherpaOnnxSpokenLanguageIdentificationResult>)>();
+
+  /// The user has to invoke SherpaOnnxDestroySpeakerEmbeddingExtractor()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>
+      SherpaOnnxCreateSpeakerEmbeddingExtractor(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig> config,
+  ) {
+    return _SherpaOnnxCreateSpeakerEmbeddingExtractor(
+      config,
+    );
+  }
+
+  late final _SherpaOnnxCreateSpeakerEmbeddingExtractorPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>)>>(
+      'SherpaOnnxCreateSpeakerEmbeddingExtractor');
+  late final _SherpaOnnxCreateSpeakerEmbeddingExtractor =
+      _SherpaOnnxCreateSpeakerEmbeddingExtractorPtr.asFunction<
+          ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>)>();
+
+  void SherpaOnnxDestroySpeakerEmbeddingExtractor(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> p,
+  ) {
+    return _SherpaOnnxDestroySpeakerEmbeddingExtractor(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxDestroySpeakerEmbeddingExtractorPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>)>>(
+      'SherpaOnnxDestroySpeakerEmbeddingExtractor');
+  late final _SherpaOnnxDestroySpeakerEmbeddingExtractor =
+      _SherpaOnnxDestroySpeakerEmbeddingExtractorPtr.asFunction<
+          void Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>)>();
+
+  int SherpaOnnxSpeakerEmbeddingExtractorDim(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> p,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingExtractorDim(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingExtractorDimPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>)>>(
+      'SherpaOnnxSpeakerEmbeddingExtractorDim');
+  late final _SherpaOnnxSpeakerEmbeddingExtractorDim =
+      _SherpaOnnxSpeakerEmbeddingExtractorDimPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>)>();
+
+  /// The user has to invoke DestroyOnlineStream() to free the returned pointer
+  /// to avoid memory leak
+  ffi.Pointer<SherpaOnnxOnlineStream>
+      SherpaOnnxSpeakerEmbeddingExtractorCreateStream(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> p,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingExtractorCreateStream(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingExtractorCreateStreamPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxOnlineStream> Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>)>>(
+      'SherpaOnnxSpeakerEmbeddingExtractorCreateStream');
+  late final _SherpaOnnxSpeakerEmbeddingExtractorCreateStream =
+      _SherpaOnnxSpeakerEmbeddingExtractorCreateStreamPtr.asFunction<
+          ffi.Pointer<SherpaOnnxOnlineStream> Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>)>();
+
+  /// Return 1 if the stream has enough feature frames for computing embeddings.
+  /// Return 0 otherwise.
+  int SherpaOnnxSpeakerEmbeddingExtractorIsReady(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> p,
+    ffi.Pointer<SherpaOnnxOnlineStream> s,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingExtractorIsReady(
+      p,
+      s,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingExtractorIsReadyPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+                  ffi.Pointer<SherpaOnnxOnlineStream>)>>(
+      'SherpaOnnxSpeakerEmbeddingExtractorIsReady');
+  late final _SherpaOnnxSpeakerEmbeddingExtractorIsReady =
+      _SherpaOnnxSpeakerEmbeddingExtractorIsReadyPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+              ffi.Pointer<SherpaOnnxOnlineStream>)>();
+
+  /// Compute the embedding of the stream.
+  ///
+  /// @return Return a pointer pointing to an array containing the embedding.
+  /// The length of the array is `dim` as returned by
+  /// SherpaOnnxSpeakerEmbeddingExtractorDim(p)
+  ///
+  /// The user has to invoke SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding()
+  /// to free the returned pointer to avoid memory leak.
+  ffi.Pointer<ffi.Float> SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor> p,
+    ffi.Pointer<SherpaOnnxOnlineStream> s,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(
+      p,
+      s,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<ffi.Float> Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+                  ffi.Pointer<SherpaOnnxOnlineStream>)>>(
+      'SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding');
+  late final _SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding =
+      _SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingPtr.asFunction<
+          ffi.Pointer<ffi.Float> Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+              ffi.Pointer<SherpaOnnxOnlineStream>)>();
+
+  void SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(
+    ffi.Pointer<ffi.Float> v,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(
+      v,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbeddingPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Float>)>>(
+          'SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding');
+  late final _SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding =
+      _SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbeddingPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Float>)>();
+
+  /// The user has to invoke SherpaOnnxDestroySpeakerEmbeddingManager()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>
+      SherpaOnnxCreateSpeakerEmbeddingManager(
+    int dim,
+  ) {
+    return _SherpaOnnxCreateSpeakerEmbeddingManager(
+      dim,
+    );
+  }
+
+  late final _SherpaOnnxCreateSpeakerEmbeddingManagerPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(
+              ffi.Int32)>>('SherpaOnnxCreateSpeakerEmbeddingManager');
+  late final _SherpaOnnxCreateSpeakerEmbeddingManager =
+      _SherpaOnnxCreateSpeakerEmbeddingManagerPtr.asFunction<
+          ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(int)>();
+
+  void SherpaOnnxDestroySpeakerEmbeddingManager(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+  ) {
+    return _SherpaOnnxDestroySpeakerEmbeddingManager(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxDestroySpeakerEmbeddingManagerPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>)>>(
+      'SherpaOnnxDestroySpeakerEmbeddingManager');
+  late final _SherpaOnnxDestroySpeakerEmbeddingManager =
+      _SherpaOnnxDestroySpeakerEmbeddingManagerPtr.asFunction<
+          void Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>)>();
+
+  /// Register the embedding of a user
+  ///
+  /// @param name  The name of the user
+  /// @param p Pointer to an array containing the embeddings. The length of the
+  /// array must be equal to `dim` used to construct the manager `p`.
+  ///
+  /// @return Return 1 if added successfully. Return 0 on error
+  int SherpaOnnxSpeakerEmbeddingManagerAdd(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Char> name,
+    ffi.Pointer<ffi.Float> v,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerAdd(
+      p,
+      name,
+      v,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerAddPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Float>)>>('SherpaOnnxSpeakerEmbeddingManagerAdd');
+  late final _SherpaOnnxSpeakerEmbeddingManagerAdd =
+      _SherpaOnnxSpeakerEmbeddingManagerAddPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Float>)>();
+
+  /// @param v Pointer to an array of embeddings. If there are n embeddings, then
+  /// v[0] is the pointer to the 0-th array containing the embeddings
+  /// v[1] is the pointer to the 1-st array containing the embeddings
+  /// v[n-1] is the pointer to the last array containing the embeddings
+  /// v[n] is a NULL pointer
+  /// @return Return 1 if added successfully. Return 0 on error
+  int SherpaOnnxSpeakerEmbeddingManagerAddList(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Char> name,
+    ffi.Pointer<ffi.Pointer<ffi.Float>> v,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerAddList(
+      p,
+      name,
+      v,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerAddListPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+                  ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Pointer<ffi.Float>>)>>(
+      'SherpaOnnxSpeakerEmbeddingManagerAddList');
+  late final _SherpaOnnxSpeakerEmbeddingManagerAddList =
+      _SherpaOnnxSpeakerEmbeddingManagerAddListPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Pointer<ffi.Float>>)>();
+
+  /// Similar to SherpaOnnxSpeakerEmbeddingManagerAddList() but the memory
+  /// is flattened.
+  ///
+  /// The length of the input array should be `n * dim`.
+  ///
+  /// @return Return 1 if added successfully. Return 0 on error
+  int SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Char> name,
+    ffi.Pointer<ffi.Float> v,
+    int n,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(
+      p,
+      name,
+      v,
+      n,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Float>,
+              ffi.Int32)>>('SherpaOnnxSpeakerEmbeddingManagerAddListFlattened');
+  late final _SherpaOnnxSpeakerEmbeddingManagerAddListFlattened =
+      _SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Float>, int)>();
+
+  /// Remove a user.
+  /// @param naem The name of the user to remove.
+  /// @return Return 1 if removed successfully; return 0 on error.
+  ///
+  /// Note if the user does not exist, it also returns 0.
+  int SherpaOnnxSpeakerEmbeddingManagerRemove(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Char> name,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerRemove(
+      p,
+      name,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerRemovePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+                  ffi.Pointer<ffi.Char>)>>(
+      'SherpaOnnxSpeakerEmbeddingManagerRemove');
+  late final _SherpaOnnxSpeakerEmbeddingManagerRemove =
+      _SherpaOnnxSpeakerEmbeddingManagerRemovePtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>)>();
+
+  /// Search if an existing users' embedding matches the given one.
+  ///
+  /// @param p Pointer to an array containing the embedding. The dim
+  /// of the array must equal to `dim` used to construct the manager `p`.
+  /// @param threshold A value between 0 and 1. If the similarity score exceeds
+  /// this threshold, we say a match is found.
+  /// @return Returns the name of the user if found. Return NULL if not found.
+  /// If not NULL, the caller has to invoke
+  /// SherpaOnnxSpeakerEmbeddingManagerFreeSearch() to free the returned
+  /// pointer to avoid memory leak.
+  ffi.Pointer<ffi.Char> SherpaOnnxSpeakerEmbeddingManagerSearch(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Float> v,
+    double threshold,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerSearch(
+      p,
+      v,
+      threshold,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerSearchPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Float>,
+              ffi.Float)>>('SherpaOnnxSpeakerEmbeddingManagerSearch');
+  late final _SherpaOnnxSpeakerEmbeddingManagerSearch =
+      _SherpaOnnxSpeakerEmbeddingManagerSearchPtr.asFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Float>,
+              double)>();
+
+  void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
+    ffi.Pointer<ffi.Char> name,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
+      name,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerFreeSearchPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+          'SherpaOnnxSpeakerEmbeddingManagerFreeSearch');
+  late final _SherpaOnnxSpeakerEmbeddingManagerFreeSearch =
+      _SherpaOnnxSpeakerEmbeddingManagerFreeSearchPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Char>)>();
+
+  /// Check whether the input embedding matches the embedding of the input
+  /// speaker.
+  ///
+  /// It is for speaker verification.
+  ///
+  /// @param name The target speaker name.
+  /// @param p The input embedding to check.
+  /// @param threshold A value between 0 and 1.
+  /// @return Return 1 if it matches. Otherwise, it returns 0.
+  int SherpaOnnxSpeakerEmbeddingManagerVerify(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Char> name,
+    ffi.Pointer<ffi.Float> v,
+    double threshold,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerVerify(
+      p,
+      name,
+      v,
+      threshold,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerVerifyPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int32 Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Float>,
+              ffi.Float)>>('SherpaOnnxSpeakerEmbeddingManagerVerify');
+  late final _SherpaOnnxSpeakerEmbeddingManagerVerify =
+      _SherpaOnnxSpeakerEmbeddingManagerVerifyPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Float>, double)>();
+
+  /// Return 1 if the user with the name is in the manager.
+  /// Return 0 if the user does not exist.
+  int SherpaOnnxSpeakerEmbeddingManagerContains(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+    ffi.Pointer<ffi.Char> name,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerContains(
+      p,
+      name,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerContainsPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+                  ffi.Pointer<ffi.Char>)>>(
+      'SherpaOnnxSpeakerEmbeddingManagerContains');
+  late final _SherpaOnnxSpeakerEmbeddingManagerContains =
+      _SherpaOnnxSpeakerEmbeddingManagerContainsPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+              ffi.Pointer<ffi.Char>)>();
+
+  /// Return number of speakers in the manager.
+  int SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerNumSpeakersPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Int32 Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>)>>(
+      'SherpaOnnxSpeakerEmbeddingManagerNumSpeakers');
+  late final _SherpaOnnxSpeakerEmbeddingManagerNumSpeakers =
+      _SherpaOnnxSpeakerEmbeddingManagerNumSpeakersPtr.asFunction<
+          int Function(ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>)>();
+
+  /// Return the name of all speakers in the manager.
+  ///
+  /// @return Return an array of pointers `ans`. If there are n speakers, then
+  /// - ans[0] contains the name of the 0-th speaker
+  /// - ans[1] contains the name of the 1-st speaker
+  /// - ans[n-1] contains the name of the last speaker
+  /// - ans[n] is NULL
+  /// If there are no users at all, then ans[0] is NULL. In any case,
+  /// `ans` is not NULL.
+  ///
+  /// Each name is NULL-terminated
+  ///
+  /// The caller has to invoke SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers()
+  /// to free the returned pointer to avoid memory leak.
+  ffi.Pointer<ffi.Pointer<ffi.Char>>
+      SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
+    ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager> p,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakersPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<ffi.Pointer<ffi.Char>> Function(
+                  ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>)>>(
+      'SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers');
+  late final _SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers =
+      _SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakersPtr.asFunction<
+          ffi.Pointer<ffi.Pointer<ffi.Char>> Function(
+              ffi.Pointer<SherpaOnnxSpeakerEmbeddingManager>)>();
+
+  void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
+    ffi.Pointer<ffi.Pointer<ffi.Char>> names,
+  ) {
+    return _SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
+      names,
+    );
+  }
+
+  late final _SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakersPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Pointer<ffi.Char>>)>>(
+      'SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers');
+  late final _SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers =
+      _SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakersPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Pointer<ffi.Char>>)>();
+
+  /// The user has to invoke
+  /// SherpaOnnxDestroyAudioTagging()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxAudioTagging> SherpaOnnxCreateAudioTagging(
+    ffi.Pointer<SherpaOnnxAudioTaggingConfig> config,
+  ) {
+    return _SherpaOnnxCreateAudioTagging(
+      config,
+    );
+  }
+
+  late final _SherpaOnnxCreateAudioTaggingPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxAudioTagging> Function(
+                  ffi.Pointer<SherpaOnnxAudioTaggingConfig>)>>(
+      'SherpaOnnxCreateAudioTagging');
+  late final _SherpaOnnxCreateAudioTagging =
+      _SherpaOnnxCreateAudioTaggingPtr.asFunction<
+          ffi.Pointer<SherpaOnnxAudioTagging> Function(
+              ffi.Pointer<SherpaOnnxAudioTaggingConfig>)>();
+
+  void SherpaOnnxDestroyAudioTagging(
+    ffi.Pointer<SherpaOnnxAudioTagging> tagger,
+  ) {
+    return _SherpaOnnxDestroyAudioTagging(
+      tagger,
+    );
+  }
+
+  late final _SherpaOnnxDestroyAudioTaggingPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<SherpaOnnxAudioTagging>)>>(
+      'SherpaOnnxDestroyAudioTagging');
+  late final _SherpaOnnxDestroyAudioTagging = _SherpaOnnxDestroyAudioTaggingPtr
+      .asFunction<void Function(ffi.Pointer<SherpaOnnxAudioTagging>)>();
+
+  /// The user has to invoke DestroyOfflineStream()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxOfflineStream>
+      SherpaOnnxAudioTaggingCreateOfflineStream(
+    ffi.Pointer<SherpaOnnxAudioTagging> tagger,
+  ) {
+    return _SherpaOnnxAudioTaggingCreateOfflineStream(
+      tagger,
+    );
+  }
+
+  late final _SherpaOnnxAudioTaggingCreateOfflineStreamPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxOfflineStream> Function(
+                  ffi.Pointer<SherpaOnnxAudioTagging>)>>(
+      'SherpaOnnxAudioTaggingCreateOfflineStream');
+  late final _SherpaOnnxAudioTaggingCreateOfflineStream =
+      _SherpaOnnxAudioTaggingCreateOfflineStreamPtr.asFunction<
+          ffi.Pointer<SherpaOnnxOfflineStream> Function(
+              ffi.Pointer<SherpaOnnxAudioTagging>)>();
+
+  /// Return an array of pointers. The length of the array is top_k + 1.
+  /// If top_k is -1, then config.top_k is used, where config is the config
+  /// used to create the input tagger.
+  ///
+  /// The ans[0]->prob has the largest probability among the array elements
+  /// The last element of the array is a null pointer
+  ///
+  /// The user has to use SherpaOnnxAudioTaggingFreeResults()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<ffi.Pointer<SherpaOnnxAudioEvent>> SherpaOnnxAudioTaggingCompute(
+    ffi.Pointer<SherpaOnnxAudioTagging> tagger,
+    ffi.Pointer<SherpaOnnxOfflineStream> s,
+    int top_k,
+  ) {
+    return _SherpaOnnxAudioTaggingCompute(
+      tagger,
+      s,
+      top_k,
+    );
+  }
+
+  late final _SherpaOnnxAudioTaggingComputePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Pointer<SherpaOnnxAudioEvent>> Function(
+              ffi.Pointer<SherpaOnnxAudioTagging>,
+              ffi.Pointer<SherpaOnnxOfflineStream>,
+              ffi.Int32)>>('SherpaOnnxAudioTaggingCompute');
+  late final _SherpaOnnxAudioTaggingCompute =
+      _SherpaOnnxAudioTaggingComputePtr.asFunction<
+          ffi.Pointer<ffi.Pointer<SherpaOnnxAudioEvent>> Function(
+              ffi.Pointer<SherpaOnnxAudioTagging>,
+              ffi.Pointer<SherpaOnnxOfflineStream>,
+              int)>();
+
+  void SherpaOnnxAudioTaggingFreeResults(
+    ffi.Pointer<ffi.Pointer<SherpaOnnxAudioEvent>> p,
+  ) {
+    return _SherpaOnnxAudioTaggingFreeResults(
+      p,
+    );
+  }
+
+  late final _SherpaOnnxAudioTaggingFreeResultsPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Pointer<ffi.Pointer<SherpaOnnxAudioEvent>>)>>(
+      'SherpaOnnxAudioTaggingFreeResults');
+  late final _SherpaOnnxAudioTaggingFreeResults =
+      _SherpaOnnxAudioTaggingFreeResultsPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Pointer<SherpaOnnxAudioEvent>>)>();
+
+  /// The user has to invoke SherpaOnnxDestroyOfflinePunctuation()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<SherpaOnnxOfflinePunctuation> SherpaOnnxCreateOfflinePunctuation(
+    ffi.Pointer<SherpaOnnxOfflinePunctuationConfig> config,
+  ) {
+    return _SherpaOnnxCreateOfflinePunctuation(
+      config,
+    );
+  }
+
+  late final _SherpaOnnxCreateOfflinePunctuationPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<SherpaOnnxOfflinePunctuation> Function(
+                  ffi.Pointer<SherpaOnnxOfflinePunctuationConfig>)>>(
+      'SherpaOnnxCreateOfflinePunctuation');
+  late final _SherpaOnnxCreateOfflinePunctuation =
+      _SherpaOnnxCreateOfflinePunctuationPtr.asFunction<
+          ffi.Pointer<SherpaOnnxOfflinePunctuation> Function(
+              ffi.Pointer<SherpaOnnxOfflinePunctuationConfig>)>();
+
+  void SherpaOnnxDestroyOfflinePunctuation(
+    ffi.Pointer<SherpaOnnxOfflinePunctuation> punct,
+  ) {
+    return _SherpaOnnxDestroyOfflinePunctuation(
+      punct,
+    );
+  }
+
+  late final _SherpaOnnxDestroyOfflinePunctuationPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<SherpaOnnxOfflinePunctuation>)>>(
+      'SherpaOnnxDestroyOfflinePunctuation');
+  late final _SherpaOnnxDestroyOfflinePunctuation =
+      _SherpaOnnxDestroyOfflinePunctuationPtr.asFunction<
+          void Function(ffi.Pointer<SherpaOnnxOfflinePunctuation>)>();
+
+  /// Add punctuations to the input text.
+  /// The user has to invoke SherpaOfflinePunctuationFreeText()
+  /// to free the returned pointer to avoid memory leak
+  ffi.Pointer<ffi.Char> SherpaOfflinePunctuationAddPunct(
+    ffi.Pointer<SherpaOnnxOfflinePunctuation> punct,
+    ffi.Pointer<ffi.Char> text,
+  ) {
+    return _SherpaOfflinePunctuationAddPunct(
+      punct,
+      text,
+    );
+  }
+
+  late final _SherpaOfflinePunctuationAddPunctPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<SherpaOnnxOfflinePunctuation>,
+              ffi.Pointer<ffi.Char>)>>('SherpaOfflinePunctuationAddPunct');
+  late final _SherpaOfflinePunctuationAddPunct =
+      _SherpaOfflinePunctuationAddPunctPtr.asFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<SherpaOnnxOfflinePunctuation>,
+              ffi.Pointer<ffi.Char>)>();
+
+  void SherpaOfflinePunctuationFreeText(
+    ffi.Pointer<ffi.Char> text,
+  ) {
+    return _SherpaOfflinePunctuationFreeText(
+      text,
+    );
+  }
+
+  late final _SherpaOfflinePunctuationFreeTextPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+          'SherpaOfflinePunctuationFreeText');
+  late final _SherpaOfflinePunctuationFreeText =
+      _SherpaOfflinePunctuationFreeTextPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Char>)>();
 }
 
 /// C interface
@@ -3222,14 +4819,17 @@ final class llama_model extends ffi.Opaque {}
 final class llama_context extends ffi.Opaque {}
 
 abstract class llama_vocab_type {
-  /// SentencePiece
-  static const int LLAMA_VOCAB_TYPE_SPM = 0;
+  /// For models without vocab
+  static const int LLAMA_VOCAB_TYPE_NONE = 0;
 
-  /// Byte Pair Encoding
-  static const int LLAMA_VOCAB_TYPE_BPE = 1;
+  /// LLaMA tokenizer based on byte-level BPE with byte fallback
+  static const int LLAMA_VOCAB_TYPE_SPM = 1;
 
-  /// WordPiece
-  static const int LLAMA_VOCAB_TYPE_WPM = 2;
+  /// GPT-2 tokenizer based on byte-level BPE
+  static const int LLAMA_VOCAB_TYPE_BPE = 2;
+
+  /// BERT tokenizer based on WordPiece
+  static const int LLAMA_VOCAB_TYPE_WPM = 3;
 }
 
 /// note: these values should be synchronized with ggml_rope
@@ -3339,6 +4939,9 @@ abstract class llama_ftype {
   /// except 1d tensors
   static const int LLAMA_FTYPE_MOSTLY_IQ4_XS = 30;
 
+  /// except 1d tensors
+  static const int LLAMA_FTYPE_MOSTLY_IQ1_M = 31;
+
   /// not specified in the model file
   static const int LLAMA_FTYPE_GUESSED = 1024;
 }
@@ -3404,7 +5007,7 @@ final class llama_token_data_array extends ffi.Struct {
 /// - embd   : token embeddings (i.e. float vector of size n_embd) (used when token is NULL)
 /// - pos    : the positions of the respective token in the sequence
 /// - seq_id : the sequence to which the respective token belongs
-/// - logits : if zero, the logits for the respective token will not be output
+/// - logits : if zero, the logits (and/or the embeddings) for the respective token will not be output
 final class llama_batch extends ffi.Struct {
   @ffi.Int32()
   external int n_tokens;
@@ -3419,6 +5022,7 @@ final class llama_batch extends ffi.Struct {
 
   external ffi.Pointer<ffi.Pointer<llama_seq_id>> seq_id;
 
+  /// TODO: rename this to "output"
   external ffi.Pointer<ffi.Int8> logits;
 
   /// used if pos == NULL
@@ -3443,27 +5047,31 @@ abstract class llama_model_kv_override_type {
   static const int LLAMA_KV_OVERRIDE_TYPE_INT = 0;
   static const int LLAMA_KV_OVERRIDE_TYPE_FLOAT = 1;
   static const int LLAMA_KV_OVERRIDE_TYPE_BOOL = 2;
+  static const int LLAMA_KV_OVERRIDE_TYPE_STR = 3;
 }
 
 final class llama_model_kv_override extends ffi.Struct {
-  @ffi.Array.multi([128])
-  external ffi.Array<ffi.Char> key;
-
   @ffi.Int32()
   external int tag;
+
+  @ffi.Array.multi([128])
+  external ffi.Array<ffi.Char> key;
 
   external UnnamedUnion1 unnamed;
 }
 
 final class UnnamedUnion1 extends ffi.Union {
   @ffi.Int64()
-  external int int_value;
+  external int val_i64;
 
   @ffi.Double()
-  external double float_value;
+  external double val_f64;
 
   @ffi.Bool()
-  external bool bool_value;
+  external bool val_bool;
+
+  @ffi.Array.multi([128])
+  external ffi.Array<ffi.Char> val_str;
 }
 
 final class llama_model_params extends ffi.Struct {
@@ -3507,6 +5115,10 @@ final class llama_model_params extends ffi.Struct {
   /// force system to keep model in RAM
   @ffi.Bool()
   external bool use_mlock;
+
+  /// validate model tensor data
+  @ffi.Bool()
+  external bool check_tensors;
 }
 
 typedef llama_progress_callback
@@ -3525,9 +5137,17 @@ final class llama_context_params extends ffi.Struct {
   @ffi.Uint32()
   external int n_ctx;
 
-  /// prompt processing maximum batch size
+  /// logical maximum batch size that can be submitted to llama_decode
   @ffi.Uint32()
   external int n_batch;
+
+  /// physical maximum batch size
+  @ffi.Uint32()
+  external int n_ubatch;
+
+  /// max number of sequences (i.e. distinct states for recurrent models)
+  @ffi.Uint32()
+  external int n_seq_max;
 
   /// number of threads to use for generation
   @ffi.Uint32()
@@ -3594,9 +5214,9 @@ final class llama_context_params extends ffi.Struct {
   @ffi.Bool()
   external bool logits_all;
 
-  /// embedding mode only
+  /// if true, extract embeddings (together with logits)
   @ffi.Bool()
-  external bool embedding;
+  external bool embeddings;
 
   /// whether to offload the KQV ops (including the KV cache) to GPU
   @ffi.Bool()
@@ -3686,6 +5306,7 @@ final class ggml_tensor extends ffi.Struct {
   external ffi.Array<ffi.Char> padding;
 }
 
+/// NOTE: always add types at the end of the enum to keep backward compatibility
 abstract class ggml_type {
   static const int GGML_TYPE_F32 = 0;
   static const int GGML_TYPE_F16 = 1;
@@ -3693,13 +5314,11 @@ abstract class ggml_type {
   static const int GGML_TYPE_Q4_1 = 3;
 
   /// GGML_TYPE_Q4_2 = 4, support has been removed
-  /// GGML_TYPE_Q4_3 (5) support has been removed
+  /// GGML_TYPE_Q4_3 = 5, support has been removed
   static const int GGML_TYPE_Q5_0 = 6;
   static const int GGML_TYPE_Q5_1 = 7;
   static const int GGML_TYPE_Q8_0 = 8;
   static const int GGML_TYPE_Q8_1 = 9;
-
-  /// k-quantizations
   static const int GGML_TYPE_Q2_K = 10;
   static const int GGML_TYPE_Q3_K = 11;
   static const int GGML_TYPE_Q4_K = 12;
@@ -3717,7 +5336,10 @@ abstract class ggml_type {
   static const int GGML_TYPE_I8 = 24;
   static const int GGML_TYPE_I16 = 25;
   static const int GGML_TYPE_I32 = 26;
-  static const int GGML_TYPE_COUNT = 27;
+  static const int GGML_TYPE_I64 = 27;
+  static const int GGML_TYPE_F64 = 28;
+  static const int GGML_TYPE_IQ1_M = 29;
+  static const int GGML_TYPE_COUNT = 30;
 }
 
 abstract class ggml_backend_type {
@@ -3786,27 +5408,31 @@ abstract class ggml_op {
   /// nearest interpolate
   static const int GGML_OP_UPSCALE = 50;
   static const int GGML_OP_PAD = 51;
-  static const int GGML_OP_ARGSORT = 52;
-  static const int GGML_OP_LEAKY_RELU = 53;
-  static const int GGML_OP_FLASH_ATTN = 54;
-  static const int GGML_OP_FLASH_FF = 55;
-  static const int GGML_OP_FLASH_ATTN_BACK = 56;
-  static const int GGML_OP_WIN_PART = 57;
-  static const int GGML_OP_WIN_UNPART = 58;
-  static const int GGML_OP_GET_REL_POS = 59;
-  static const int GGML_OP_ADD_REL_POS = 60;
-  static const int GGML_OP_UNARY = 61;
-  static const int GGML_OP_MAP_UNARY = 62;
-  static const int GGML_OP_MAP_BINARY = 63;
-  static const int GGML_OP_MAP_CUSTOM1_F32 = 64;
-  static const int GGML_OP_MAP_CUSTOM2_F32 = 65;
-  static const int GGML_OP_MAP_CUSTOM3_F32 = 66;
-  static const int GGML_OP_MAP_CUSTOM1 = 67;
-  static const int GGML_OP_MAP_CUSTOM2 = 68;
-  static const int GGML_OP_MAP_CUSTOM3 = 69;
-  static const int GGML_OP_CROSS_ENTROPY_LOSS = 70;
-  static const int GGML_OP_CROSS_ENTROPY_LOSS_BACK = 71;
-  static const int GGML_OP_COUNT = 72;
+  static const int GGML_OP_ARANGE = 52;
+  static const int GGML_OP_TIMESTEP_EMBEDDING = 53;
+  static const int GGML_OP_ARGSORT = 54;
+  static const int GGML_OP_LEAKY_RELU = 55;
+  static const int GGML_OP_FLASH_ATTN = 56;
+  static const int GGML_OP_FLASH_FF = 57;
+  static const int GGML_OP_FLASH_ATTN_BACK = 58;
+  static const int GGML_OP_SSM_CONV = 59;
+  static const int GGML_OP_SSM_SCAN = 60;
+  static const int GGML_OP_WIN_PART = 61;
+  static const int GGML_OP_WIN_UNPART = 62;
+  static const int GGML_OP_GET_REL_POS = 63;
+  static const int GGML_OP_ADD_REL_POS = 64;
+  static const int GGML_OP_UNARY = 65;
+  static const int GGML_OP_MAP_UNARY = 66;
+  static const int GGML_OP_MAP_BINARY = 67;
+  static const int GGML_OP_MAP_CUSTOM1_F32 = 68;
+  static const int GGML_OP_MAP_CUSTOM2_F32 = 69;
+  static const int GGML_OP_MAP_CUSTOM3_F32 = 70;
+  static const int GGML_OP_MAP_CUSTOM1 = 71;
+  static const int GGML_OP_MAP_CUSTOM2 = 72;
+  static const int GGML_OP_MAP_CUSTOM3 = 73;
+  static const int GGML_OP_CROSS_ENTROPY_LOSS = 74;
+  static const int GGML_OP_CROSS_ENTROPY_LOSS_BACK = 75;
+  static const int GGML_OP_COUNT = 76;
 }
 
 /// Abort callback
@@ -3829,6 +5455,14 @@ final class llama_model_quantize_params extends ffi.Struct {
   @ffi.Int32()
   external int ftype;
 
+  /// output tensor type
+  @ffi.Int32()
+  external int output_tensor_type;
+
+  /// itoken embeddings tensor type
+  @ffi.Int32()
+  external int token_embedding_type;
+
   /// allow quantizing non-f32/f16 tensors
   @ffi.Bool()
   external bool allow_requantize;
@@ -3841,12 +5475,19 @@ final class llama_model_quantize_params extends ffi.Struct {
   @ffi.Bool()
   external bool only_copy;
 
-  /// disable k-quant mixtures and quantize all tensors to the same type
+  /// quantize all tensors to the default type
   @ffi.Bool()
   external bool pure;
 
+  /// quantize to the same number of shards
+  @ffi.Bool()
+  external bool keep_split;
+
   /// pointer to importance matrix data
   external ffi.Pointer<ffi.Void> imatrix;
+
+  /// pointer to vector containing overrides
+  external ffi.Pointer<ffi.Void> kv_overrides;
 }
 
 /// grammar types
@@ -3952,7 +5593,7 @@ final class llama_kv_cache_view extends ffi.Struct {
   /// if there are more sequences in a cell than this value, however they will
   /// not be visible in the view cells_sequences.
   @ffi.Int32()
-  external int n_max_seq;
+  external int n_seq_max;
 
   /// Number of tokens in the cache. For example, if there are two populated
   /// cells, the first with 1 sequence id in it and the second with 2 sequence
@@ -3976,7 +5617,7 @@ final class llama_kv_cache_view extends ffi.Struct {
   /// Information for an individual cell.
   external ffi.Pointer<llama_kv_cache_view_cell> cells;
 
-  /// The sequences for each cell. There will be n_max_seq items per cell.
+  /// The sequences for each cell. There will be n_seq_max items per cell.
   external ffi.Pointer<llama_seq_id> cells_sequences;
 }
 
@@ -4247,6 +5888,13 @@ final class SherpaOnnxFeatureConfig extends ffi.Struct {
   external int feature_dim;
 }
 
+final class SherpaOnnxOnlineCtcFstDecoderConfig extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> graph;
+
+  @ffi.Int32()
+  external int max_active;
+}
+
 final class SherpaOnnxOnlineRecognizerConfig extends ffi.Struct {
   external SherpaOnnxFeatureConfig feat_config;
 
@@ -4289,6 +5937,8 @@ final class SherpaOnnxOnlineRecognizerConfig extends ffi.Struct {
   /// Bonus score for each token in hotwords.
   @ffi.Float()
   external double hotwords_score;
+
+  external SherpaOnnxOnlineCtcFstDecoderConfig ctc_fst_decoder_config;
 }
 
 final class SherpaOnnxOnlineRecognizerResult extends ffi.Struct {
@@ -4303,6 +5953,10 @@ final class SherpaOnnxOnlineRecognizerResult extends ffi.Struct {
   external ffi.Pointer<ffi.Pointer<ffi.Char>> tokens_arr;
 
   /// Pointer to continuous memory which holds timestamps
+  ///
+  /// Caution: If timestamp information is not available, this pointer is NULL.
+  /// Please check whether it is NULL before you access it; otherwise, you would
+  /// get segmentation fault.
   external ffi.Pointer<ffi.Float> timestamps;
 
   /// The number of tokens/timestamps in above pointer
@@ -4354,6 +6008,10 @@ final class SherpaOnnxOfflineWhisperModelConfig extends ffi.Struct {
   external ffi.Pointer<ffi.Char> encoder;
 
   external ffi.Pointer<ffi.Char> decoder;
+
+  external ffi.Pointer<ffi.Char> language;
+
+  external ffi.Pointer<ffi.Char> task;
 }
 
 final class SherpaOnnxOfflineTdnnModelConfig extends ffi.Struct {
@@ -4427,6 +6085,69 @@ final class SherpaOnnxOfflineRecognizerResult extends ffi.Struct {
   @ffi.Int32()
   external int count;
 }
+
+/// ============================================================
+/// For Keyword Spot
+/// ============================================================
+final class SherpaOnnxKeywordResult extends ffi.Struct {
+  /// The triggered keyword.
+  /// For English, it consists of space separated words.
+  /// For Chinese, it consists of Chinese words without spaces.
+  /// Example 1: "hello world"
+  /// Example 2: "你好世界"
+  external ffi.Pointer<ffi.Char> keyword;
+
+  /// Decoded results at the token level.
+  /// For instance, for BPE-based models it consists of a list of BPE tokens.
+  external ffi.Pointer<ffi.Char> tokens;
+
+  external ffi.Pointer<ffi.Pointer<ffi.Char>> tokens_arr;
+
+  @ffi.Int32()
+  external int count;
+
+  /// timestamps.size() == tokens.size()
+  /// timestamps[i] records the time in seconds when tokens[i] is decoded.
+  external ffi.Pointer<ffi.Float> timestamps;
+
+  /// Starting time of this segment.
+  /// When an endpoint is detected, it will change
+  @ffi.Float()
+  external double start_time;
+
+  /// Return a json string.
+  ///
+  /// The returned string contains:
+  /// {
+  /// "keyword": "The triggered keyword",
+  /// "tokens": [x, x, x],
+  /// "timestamps": [x, x, x],
+  /// "start_time": x,
+  /// }
+  external ffi.Pointer<ffi.Char> json;
+}
+
+final class SherpaOnnxKeywordSpotterConfig extends ffi.Struct {
+  external SherpaOnnxFeatureConfig feat_config;
+
+  external SherpaOnnxOnlineModelConfig model_config;
+
+  @ffi.Int32()
+  external int max_active_paths;
+
+  @ffi.Int32()
+  external int num_trailing_blanks;
+
+  @ffi.Float()
+  external double keywords_score;
+
+  @ffi.Float()
+  external double keywords_threshold;
+
+  external ffi.Pointer<ffi.Char> keywords_file;
+}
+
+final class SherpaOnnxKeywordSpotter extends ffi.Opaque {}
 
 /// ============================================================
 /// For VAD
@@ -4507,6 +6228,8 @@ final class SherpaOnnxOfflineTtsVitsModelConfig extends ffi.Struct {
   /// < 1, faster in speed; > 1, slower in speed
   @ffi.Float()
   external double length_scale;
+
+  external ffi.Pointer<ffi.Char> dict_dir;
 }
 
 final class SherpaOnnxOfflineTtsModelConfig extends ffi.Struct {
@@ -4528,6 +6251,8 @@ final class SherpaOnnxOfflineTtsConfig extends ffi.Struct {
 
   @ffi.Int32()
   external int max_num_sentences;
+
+  external ffi.Pointer<ffi.Char> rule_fars;
 }
 
 final class SherpaOnnxGeneratedAudio extends ffi.Struct {
@@ -4550,6 +6275,144 @@ typedef SherpaOnnxGeneratedAudioCallbackFunction = ffi.Void Function(
     ffi.Pointer<ffi.Float> samples, ffi.Int32 n);
 typedef DartSherpaOnnxGeneratedAudioCallbackFunction = void Function(
     ffi.Pointer<ffi.Float> samples, int n);
+typedef SherpaOnnxGeneratedAudioCallbackWithArg = ffi.Pointer<
+    ffi.NativeFunction<SherpaOnnxGeneratedAudioCallbackWithArgFunction>>;
+typedef SherpaOnnxGeneratedAudioCallbackWithArgFunction = ffi.Void Function(
+    ffi.Pointer<ffi.Float> samples, ffi.Int32 n, ffi.Pointer<ffi.Void> arg);
+typedef DartSherpaOnnxGeneratedAudioCallbackWithArgFunction = void Function(
+    ffi.Pointer<ffi.Float> samples, int n, ffi.Pointer<ffi.Void> arg);
+
+final class SherpaOnnxWave extends ffi.Struct {
+  /// samples normalized to the range [-1, 1]
+  external ffi.Pointer<ffi.Float> samples;
+
+  @ffi.Int32()
+  external int sample_rate;
+
+  @ffi.Int32()
+  external int num_samples;
+}
+
+/// ============================================================
+/// For spoken language identification
+/// ============================================================
+final class SherpaOnnxSpokenLanguageIdentificationWhisperConfig
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> encoder;
+
+  external ffi.Pointer<ffi.Char> decoder;
+
+  @ffi.Int32()
+  external int tail_paddings;
+}
+
+final class SherpaOnnxSpokenLanguageIdentificationConfig extends ffi.Struct {
+  external SherpaOnnxSpokenLanguageIdentificationWhisperConfig whisper;
+
+  @ffi.Int32()
+  external int num_threads;
+
+  @ffi.Int32()
+  external int debug;
+
+  external ffi.Pointer<ffi.Char> provider;
+}
+
+final class SherpaOnnxSpokenLanguageIdentification extends ffi.Opaque {}
+
+final class SherpaOnnxSpokenLanguageIdentificationResult extends ffi.Struct {
+  /// en for English
+  /// de for German
+  /// zh for Chinese
+  /// es for Spanish
+  /// ...
+  external ffi.Pointer<ffi.Char> lang;
+}
+
+/// ============================================================
+/// For speaker embedding extraction
+/// ============================================================
+final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> model;
+
+  @ffi.Int32()
+  external int num_threads;
+
+  @ffi.Int32()
+  external int debug;
+
+  external ffi.Pointer<ffi.Char> provider;
+}
+
+final class SherpaOnnxSpeakerEmbeddingExtractor extends ffi.Opaque {}
+
+final class SherpaOnnxSpeakerEmbeddingManager extends ffi.Opaque {}
+
+/// ============================================================
+/// For audio tagging
+/// ============================================================
+final class SherpaOnnxOfflineZipformerAudioTaggingModelConfig
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> model;
+}
+
+final class SherpaOnnxAudioTaggingModelConfig extends ffi.Struct {
+  external SherpaOnnxOfflineZipformerAudioTaggingModelConfig zipformer;
+
+  external ffi.Pointer<ffi.Char> ced;
+
+  @ffi.Int32()
+  external int num_threads;
+
+  /// true to print debug information of the model
+  @ffi.Int32()
+  external int debug;
+
+  external ffi.Pointer<ffi.Char> provider;
+}
+
+final class SherpaOnnxAudioTaggingConfig extends ffi.Struct {
+  external SherpaOnnxAudioTaggingModelConfig model;
+
+  external ffi.Pointer<ffi.Char> labels;
+
+  @ffi.Int32()
+  external int top_k;
+}
+
+final class SherpaOnnxAudioEvent extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> name;
+
+  @ffi.Int32()
+  external int index;
+
+  @ffi.Float()
+  external double prob;
+}
+
+final class SherpaOnnxAudioTagging extends ffi.Opaque {}
+
+/// ============================================================
+/// For punctuation
+/// ============================================================
+final class SherpaOnnxOfflinePunctuationModelConfig extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> ct_transformer;
+
+  @ffi.Int32()
+  external int num_threads;
+
+  /// true to print debug information of the model
+  @ffi.Int32()
+  external int debug;
+
+  external ffi.Pointer<ffi.Char> provider;
+}
+
+final class SherpaOnnxOfflinePunctuationConfig extends ffi.Struct {
+  external SherpaOnnxOfflinePunctuationModelConfig model;
+}
+
+final class SherpaOnnxOfflinePunctuation extends ffi.Opaque {}
 
 const int LLAMA_DEFAULT_SEED = 4294967295;
 
@@ -4559,6 +6422,12 @@ const int LLAMA_FILE_MAGIC_GGLA = 1734831201;
 
 const int LLAMA_FILE_MAGIC_GGSN = 1734833006;
 
+const int LLAMA_FILE_MAGIC_GGSQ = 1734833009;
+
 const int LLAMA_SESSION_MAGIC = 1734833006;
 
-const int LLAMA_SESSION_VERSION = 4;
+const int LLAMA_SESSION_VERSION = 5;
+
+const int LLAMA_STATE_SEQ_MAGIC = 1734833009;
+
+const int LLAMA_STATE_SEQ_VERSION = 1;

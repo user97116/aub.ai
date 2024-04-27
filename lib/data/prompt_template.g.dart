@@ -10,9 +10,9 @@ _$PromptTemplateImpl _$$PromptTemplateImplFromJson(Map<String, dynamic> json) =>
     _$PromptTemplateImpl(
       template: json['template'] as String,
       label: json['label'] as String?,
-      contextSize: json['contextSize'] as int?,
-      randomSeedNumber: json['randomSeedNumber'] as int?,
-      cpuThreadsToUse: json['cpuThreadsToUse'] as int?,
+      contextSize: (json['contextSize'] as num?)?.toInt(),
+      randomSeedNumber: (json['randomSeedNumber'] as num?)?.toInt(),
+      cpuThreadsToUse: (json['cpuThreadsToUse'] as num?)?.toInt(),
       eosToken: json['eosToken'] as String?,
       temperature: (json['temperature'] as num?)?.toDouble(),
     );

@@ -27,7 +27,12 @@ ffi.Pointer<llama_token> _allocateCIntList(int length) {
 }
 
 void _batchAdd(
-    llama_batch batch, int id, int pos, List<int> seqIds, bool logits) {
+  llama_batch batch,
+  int id,
+  int pos,
+  List<int> seqIds,
+  bool logits,
+) {
   batch.token[batch.n_tokens] = id;
   batch.pos[batch.n_tokens] = pos;
   batch.n_seq_id[batch.n_tokens] = seqIds.length;
@@ -165,6 +170,7 @@ Stream<String> _generateResponse({
     batch.token[0],
     calloc<ffi.Char>(512),
     512,
+    false,
   );
 
   log('[AUB.AI] Decoded tokens into string: $decodedTokensIntoString');
@@ -247,8 +253,13 @@ String _tokenToPiece(
   int bufferSize = 64;
   Pointer<Char> result = malloc.allocate<Char>(bufferSize);
   try {
-    int bytesWritten =
-        llamaCpp.llama_token_to_piece(model, token, result, bufferSize);
+    int bytesWritten = llamaCpp.llama_token_to_piece(
+      model,
+      token,
+      result,
+      bufferSize,
+      false,
+    );
 
     bytesWritten = min(bytesWritten, bufferSize - 1);
 
