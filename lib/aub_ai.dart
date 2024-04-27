@@ -26,14 +26,6 @@ ffi.Pointer<llama_token> _allocateCIntList(int length) {
   return calloc<llama_token>(length);
 }
 
-int _getStringLength(Pointer<Char> buffer) {
-  int length = 0;
-  while (buffer.elementAt(length).value != 0) {
-    length++;
-  }
-  return length;
-}
-
 void _batchAdd(
     llama_batch batch, int id, int pos, List<int> seqIds, bool logits) {
   batch.token[batch.n_tokens] = id;
@@ -44,33 +36,6 @@ void _batchAdd(
   }
   batch.logits[batch.n_tokens] = logits ? 1 : 0;
   batch.n_tokens += 1;
-}
-
-ffi.Pointer<ffi.Int32> _truncateMemory(
-  ffi.Pointer<ffi.Int32> original,
-  int originalLength,
-  int nOfTok,
-) {
-  // Step 1: Allocate a new block of memory of size n_of_tok
-  final truncated = calloc<ffi.Int32>(nOfTok);
-
-  // Step 2: Copy data from the original pointer to the new pointer
-  for (int i = 0; i < nOfTok && i < nOfTok; i++) {
-    truncated[i] = original[i];
-  }
-
-  calloc.free(original);
-
-  return truncated;
-}
-
-ffi.Pointer<ffi.Int32> _allocateIntArray(List<int> list) {
-  final pointer = calloc<ffi.Int32>(list.length);
-
-  for (int i = 0; i < list.length; i++) {
-    pointer[i] = list[i];
-  }
-  return pointer;
 }
 
 /// Invoke the AI model to generate a response from given [instruction].
